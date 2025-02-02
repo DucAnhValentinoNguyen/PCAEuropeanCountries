@@ -1,0 +1,71 @@
+---
+title: "PCAEuropeanCountries"
+author: "Duc-Anh Nguyen"
+date: "2025-02-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## EDA
+```{r}
+euro<-read.table("europa.txt",header=T)
+dim(euro)
+head(euro)
+skimr::skim(euro)
+
+
+#asnumericmatrix
+euro_matrix <- euro[, -1] |>
+  as.matrix()
+rownames(euro_matrix) <- euro[, 1]
+head(euro_matrix)
+
+(cov_euro <- cov(euro_matrix))
+(cor_euro <- cor(euro_matrix))
+```
+
+Let's do PCA with SVD   
+
+##PCA
+```{r}
+pca_corr <- prcomp(euro_matrix, scale = TRUE)
+pca_corr
+summary(pca_corr)
+```
+
+let us visualise that   
+```{r}
+#install.packages("cowplot")
+library(cowplot)
+library(factoextra)
+
+screeplot(pca_corr)
+
+# plot the scree plot
+plot_grid(
+  fviz_eig(pca_corr, addlabels = TRUE) + ggtitle(""),
+  fviz_eig(pca_corr, choice = "eigenvalue", addlabels = TRUE) + ggtitle("")
+)
+```
+
+Consider the Kaiser criteria (we keep all the PCs that has eigenvalue larger than 1), the variance criteria(all the PCs that explain 80% the variance) and the practicality, we will stick with 2 PCs
+
+
+Now for biplot 
+```{r}
+fviz_pca_var(pca_corr, col.var = "black")
+
+fviz_pca_ind(pca_corr)
+```
+arbl(Unemployment) and brut(Gross national product) have negative correlation, while ober(country area) and einw(population) are strong positive correlated. Between arbl and ober/einw there is pretty much no correlation, same for brut and ober/einw.
+
+From the biplot we can see for example that Germany is a country with large living area and population. Norway is a country having high gross national product and low rate of unemployment, while Poland is the opposite.
+
+Note that we could get the coordinates of each country with
+```{r}
+pca_corr$x[, 1:2]
+```
